@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://garmin-code/contract/sessions.schema.json",
+  "title": "ClaudeWatch /sessions response",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["sessions"],
+  "properties": {
+    "sessions": {
+      "type": "array",
+      "maxItems": 50,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "project", "title", "lastActive", "messages", "active"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "project": { "type": "string", "minLength": 1 },
+          "title": { "type": "string", "minLength": 1 },
+          "lastActive": { "type": "integer", "minimum": 0 },
+          "messages": { "type": "integer", "minimum": 0 },
+          "active": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,84 @@
+{
+  "sessions": [
+    {
+      "id": "b0cf8046",
+      "project": "sonar",
+      "title": "Review entire repository for context",
+      "lastActive": 1782903580,
+      "messages": 764,
+      "active": true
+    },
+    {
+      "id": "7a1e9c33",
+      "project": "mux",
+      "title": "Configure leader key with capital C",
+      "lastActive": 1782903120,
+      "messages": 796,
+      "active": false
+    },
+    {
+      "id": "3f92d5a1",
+      "project": "development",
+      "title": "Garmin Forerunner 165 configuration",
+      "lastActive": 1782901080,
+      "messages": 116,
+      "active": false
+    },
+    {
+      "id": "c85b7e20",
+      "project": "final-personal-site",
+      "title": "Understand project architecture and UI design",
+      "lastActive": 1782892800,
+      "messages": 508,
+      "active": false
+    },
+    {
+      "id": "9d4a1f6b",
+      "project": "thecodepreneur-network",
+      "title": "Fix slow directory loading",
+      "lastActive": 1782882000,
+      "messages": 151,
+      "active": false
+    },
+    {
+      "id": "1e6c8a94",
+      "project": "fable5-testing",
+      "title": "stripe-scaling-era-3d-replica",
+      "lastActive": 1782831600,
+      "messages": 1251,
+      "active": false
+    },
+    {
+      "id": "5b2f0d77",
+      "project": "pyengine",
+      "title": "Review project directory and gain context",
+      "lastActive": 1782802800,
+      "messages": 14,
+      "active": false
+    },
+    {
+      "id": "8c3e11a5",
+      "project": "explano",
+      "title": "Add onboarding flow to landing page",
+      "lastActive": 1782730800,
+      "messages": 88,
+      "active": false
+    },
+    {
+      "id": "a47d9e02",
+      "project": "claycast",
+      "title": "Debug audio recording pipeline",
+      "lastActive": 1782626400,
+      "messages": 233,
+      "active": false
+    },
+    {
+      "id": "f0b6c8d3",
+      "project": "labhackathon",
+      "title": "Wire up realtime multiplayer chat",
+      "lastActive": 1782558000,
+      "messages": 70,
+      "active": false
+    }
+  ]
+}
