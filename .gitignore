@@ -3,7 +3,9 @@ PRD.md
 
 # Secrets / local config (committed as *.example instead)
 apps/daemon/.env
-apps/watch/source/Config.mc
+# apps/watch/source/Config.mc is committed with safe placeholder values so a
+# fresh checkout builds. Users keep their real token local via:
+#   git update-index --skip-worktree apps/watch/source/Config.mc
 
 # Node
 node_modules/

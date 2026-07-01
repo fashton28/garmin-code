@@ -13,8 +13,9 @@
             <iq:product id="fr165"/>
         </iq:products>
 
-        <!-- W1 is a static list only; no Communications permission yet (added in a later networking issue). -->
+        <!-- W2: needed for Toybox.Communications.makeWebRequest (GET /sessions). -->
         <iq:permissions>
+            <iq:uses-permission id="Communications"/>
         </iq:permissions>
 
         <iq:languages>
