@@ -15,6 +15,8 @@ class Session {
     public var active as Boolean;
     // Coarse activity state: "working" | "waiting" | "idle" (see contract).
     public var state as String;
+    // Short model name the session last used, or "" if unknown.
+    public var model as String;
 
     function initialize(data as Dictionary) {
         id = stringOr(data["id"], "");
@@ -24,6 +26,7 @@ class Session {
         messages = numberOr(data["messages"]);
         active = (data["active"] == true);
         state = stringOr(data["state"], "idle");
+        model = stringOr(data["model"], "");
     }
 
     private function stringOr(value, fallback as String) as String {

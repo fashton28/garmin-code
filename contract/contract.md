@@ -27,7 +27,8 @@ Authorization: Bearer <token>
       "lastActive": 1782903580,
       "messages": 764,
       "active": true,
-      "state": "working"
+      "state": "working",
+      "model": "fable-5"
     }
   ]
 }
@@ -44,6 +45,7 @@ Authorization: Bearer <token>
 | `messages`   | integer | Count of `user` + `assistant` lines in the session file. |
 | `active`     | boolean | `true` if the file mtime is within the last 60 seconds. |
 | `state`      | string  | Coarse activity state, one of `"working"`, `"waiting"`, `"idle"` (see below). |
+| `model`      | string  | Short name of the model the session last used (e.g. `"fable-5"`), or `""` if unknown. |
 
 ### `state`
 
@@ -59,7 +61,63 @@ heuristic over the file's freshness and last conversation turn.
 
 - Sessions are sorted by `lastActive` **descending** (newest first).
 - The array is truncated to `limit` (default 10, max 50).
-- No field beyond the seven above is present. Keep the payload lean for the FR165 heap.
+- No field beyond the eight above is present. Keep the payload lean for the FR165 heap.
+
+## Tasks (v2)
+
+Run a task inside a session, headlessly, from the watch. The daemon spawns
+`claude -p` in the session's working directory with a fixed prompt and a scoped
+tool allowlist (`--permission-mode acceptEdits`).
+
+### Start a task
+
+```
+POST /sessions/:id/tasks
+Authorization: Bearer <token>
+{ "task": "create_pr" | "run_tests" | "review" }
+```
+
+- `202` → `{ "taskId": "<uuid>", "status": "running" }`
+- `400` if `task` is not one of the three ids; `404` if the session id is unknown; `401` on bad token.
+
+### Poll a task
+
+```
+GET /tasks/:id
+Authorization: Bearer <token>
+```
+
+- `200` → `{ "id", "sessionId", "type", "status": "running"|"done"|"failed", "summary", "model" }`
+- `404` if the task id is unknown.
+
+`summary` is always a short human string reporting how it went (the PR URL for
+`create_pr`, a pass/fail line for `run_tests`, a findings blurb for `review`).
+`model` is the primary model that ran the task, short form (e.g. `"fable-5"`), or
+`""` while still running / unknown. Tasks time out after 5 minutes.
+
+## Usage (v2)
+
+Overall usage across all sessions, for the watch dashboard.
+
+```
+GET /usage
+Authorization: Bearer <token>
+```
+
+`200` →
+
+```json
+{
+  "sessions": 26,
+  "messages": 4132,
+  "inputTokens": 657535,
+  "outputTokens": 6032400,
+  "cacheReadTokens": 928945987,
+  "models": [{ "name": "opus-4-8", "outputTokens": 4558626 }]
+}
+```
+
+`models` is the top few models by output tokens (short names), descending.
 
 ## Canonical fixture
 

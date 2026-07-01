@@ -6,8 +6,17 @@ import Toybox.WatchUi;
 // font resource is not free to load, so each is loaded once on first use and
 // reused for every subsequent draw.
 module Fonts {
+    var _big as FontResource? = null;
     var _med as FontResource? = null;
     var _sml as FontResource? = null;
+
+    // Large - the usage dashboard hero number (lazy: only the usage view uses it).
+    function big() as FontResource {
+        if (_big == null) {
+            _big = WatchUi.loadResource($.Rez.Fonts.claudemono_big) as FontResource;
+        }
+        return _big as FontResource;
+    }
 
     // Medium weight - titles and headings.
     function medium() as FontResource {

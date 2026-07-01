@@ -29,6 +29,11 @@ export function resolveStateDir(env: NodeJS.ProcessEnv = process.env): string {
   return expandHome(env.CLAUDEWATCH_STATE_DIR ?? join(homedir(), ".claude", "claudewatch-state"));
 }
 
+/** Shorten a model id for display: "claude-fable-5" -> "fable-5". */
+export function shortModelName(id: string): string {
+  return id.replace(/^claude-/, "").replace(/-\d{8}$/, "");
+}
+
 /** Expand a leading `~` to the user's home directory, then resolve to absolute. */
 export function expandHome(p: string): string {
   if (p === "~") return homedir();

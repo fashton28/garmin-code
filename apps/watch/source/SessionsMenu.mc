@@ -33,13 +33,14 @@ class SessionsMenu extends WatchUi.CustomMenu {
             :title => new SessionsMenuTitle()
         });
 
-        addItem(new SessionRow(:refresh, "Refresh", "Reload sessions", ""));
+        addItem(new SessionRow(:refresh, "Refresh", "Reload sessions", "", "", ""));
+        addItem(new SessionRow(:usage, "Usage", "Overall usage", "", "", ""));
 
         var now = Time.now().value();
         for (var i = 0; i < sessions.size(); i++) {
             var s = sessions[i];
             var sub = TimeFormat.relative(s.lastActive, now) + " - " + s.project;
-            addItem(new SessionRow(s.id, s.title, sub, s.state));
+            addItem(new SessionRow(s.id, s.title, sub, s.state, s.model, s.project));
         }
     }
 }
@@ -88,12 +89,27 @@ class SessionRow extends WatchUi.CustomMenuItem {
     private var _title as String;
     private var _sub as String;
     private var _state as String;
+    private var _model as String;
+    private var _project as String;
 
-    function initialize(id as Object, title as String, sub as String, state as String) {
+    function initialize(id as Object, title as String, sub as String, state as String, model as String, project as String) {
         CustomMenuItem.initialize(id, {});
         _title = title;
         _sub = sub;
         _state = state;
+        _model = model;
+        _project = project;
+    }
+
+    // The session's short project name, used as the task menu header (never
+    // overflows, unlike the long title).
+    function rowProject() as String {
+        return _project;
+    }
+
+    // The session's model, shown in the task menu header.
+    function rowModel() as String {
+        return _model;
     }
 
     function draw(dc as Graphics.Dc) as Void {

@@ -25,6 +25,8 @@ export interface Session {
   active: boolean;
   /** Coarse activity state: working | waiting | idle. */
   state: SessionState;
+  /** Short model name the session last used (e.g. "fable-5"), or "" if unknown. */
+  model: string;
 }
 
 /** The full /sessions response body. */

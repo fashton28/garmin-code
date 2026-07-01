@@ -16,6 +16,7 @@ import {
   WORKING_WINDOW_SECONDS,
   resolveProjectsDir,
   resolveStateDir,
+  shortModelName,
 } from "./config.js";
 import { readHookState } from "./stateStore.js";
 import type { Session, SessionState } from "./types.js";
@@ -44,6 +45,7 @@ interface Line {
   cwd?: string;
   aiTitle?: string;
   lastPrompt?: string;
+  message?: { model?: string };
 }
 
 interface ParsedSession {
@@ -54,6 +56,8 @@ interface ParsedSession {
   messages: number;
   /** Type of the last real conversation turn (metadata lines ignored). */
   lastTurn: "user" | "assistant" | undefined;
+  /** Last non-synthetic model the session used, if any. */
+  lastModel: string | undefined;
 }
 
 /** Parse a single session file, accumulating only the fields the model needs. */
@@ -65,6 +69,7 @@ function parseSessionFile(filePath: string): ParsedSession {
     lastPrompt: undefined,
     messages: 0,
     lastTurn: undefined,
+    lastModel: undefined,
   };
 
   const raw = readFileSync(filePath, "utf8");
@@ -85,10 +90,15 @@ function parseSessionFile(filePath: string): ParsedSession {
         acc.messages += 1;
         acc.lastTurn = "user";
         break;
-      case "assistant":
+      case "assistant": {
         acc.messages += 1;
         acc.lastTurn = "assistant";
+        const model = entry.message?.model;
+        if (typeof model === "string" && model.length > 0 && model !== "<synthetic>") {
+          acc.lastModel = model;
+        }
         break;
+      }
       case "ai-title":
         // Keep the last one seen.
         if (typeof entry.aiTitle === "string") acc.aiTitle = entry.aiTitle;
@@ -219,10 +229,56 @@ export function readSessions(options: ReadSessionsOptions = {}): Session[] {
         messages: parsed.messages,
         active: ageSeconds <= ACTIVE_WINDOW_SECONDS && nowSeconds >= lastActive,
         state,
+        model: parsed.lastModel ? shortModelName(parsed.lastModel) : "",
       });
     }
   }
 
   sessions.sort((a, b) => b.lastActive - a.lastActive);
   return sessions.slice(0, limit);
+}
+
+/** A located session file: its full UUID stem, working dir, and path. */
+export interface SessionRef {
+  fullId: string;
+  cwd: string;
+  filePath: string;
+}
+
+/**
+ * Locate a session file by the short id the API emits (or its full stem).
+ * Returns null if no matching, non-excluded session exists. Used by the task
+ * runner to resolve `:id` back to a resumable session + cwd.
+ */
+export function findSession(
+  shortId: string,
+  projectsDir: string = resolveProjectsDir(),
+): SessionRef | null {
+  let projectDirs: string[];
+  try {
+    projectDirs = readdirSync(projectsDir, { withFileTypes: true })
+      .filter((d) => d.isDirectory() && !isExcludedProjectDir(d.name))
+      .map((d) => d.name);
+  } catch {
+    return null;
+  }
+
+  for (const dir of projectDirs) {
+    const dirPath = join(projectsDir, dir);
+    let files: string[];
+    try {
+      files = readdirSync(dirPath).filter((f) => f.endsWith(".jsonl"));
+    } catch {
+      continue;
+    }
+    for (const file of files) {
+      const stem = file.replace(/\.jsonl$/, "");
+      if (stem === shortId || stem.slice(0, 8) === shortId) {
+        const filePath = join(dirPath, file);
+        const parsed = parseSessionFile(filePath);
+        return { fullId: stem, cwd: parsed.cwd ?? dirPath, filePath };
+      }
+    }
+  }
+  return null;
 }
