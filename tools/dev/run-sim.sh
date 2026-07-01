@@ -36,9 +36,11 @@ cleanup() {
     mv -f "$CONFIG_BACKUP" "$CONFIG"
     echo "restored your Config.mc"
   fi
-  # Only stop the daemon if this script started it.
-  if [[ "$STARTED_DAEMON" == "1" && -n "$DAEMON_PID" ]]; then
-    kill -- "-$DAEMON_PID" 2>/dev/null || kill "$DAEMON_PID" 2>/dev/null || true
+  # Only stop the daemon if this script started it. Free the port (this also
+  # kills the node child that npm spawns), then reap the npm wrapper.
+  if [[ "$STARTED_DAEMON" == "1" ]]; then
+    lsof -tiTCP:"$PORT" -sTCP:LISTEN 2>/dev/null | xargs -r kill 2>/dev/null || true
+    [[ -n "$DAEMON_PID" ]] && kill "$DAEMON_PID" 2>/dev/null || true
     echo "stopped local daemon"
   fi
 }
@@ -49,16 +51,19 @@ if curl -s -o /dev/null "http://localhost:$PORT/sessions" 2>/dev/null; then
   echo "using daemon already listening on :$PORT"
 else
   echo "starting local daemon on :$PORT (token: $DEV_TOKEN) ..."
-  CLAUDEWATCH_TOKEN="$DEV_TOKEN" PORT="$PORT" setsid npm run serve >/tmp/claudewatch-daemon.log 2>&1 &
+  # No `setsid` on macOS; a plain background job is fine (cleanup frees the port).
+  CLAUDEWATCH_TOKEN="$DEV_TOKEN" PORT="$PORT" npm run serve >/tmp/claudewatch-daemon.log 2>&1 &
   DAEMON_PID=$!
   STARTED_DAEMON=1
-  # Wait until it answers (any HTTP status = listening), up to ~10s.
-  for _ in $(seq 1 20); do
+  # Wait until it answers (any HTTP status = listening), up to ~15s; fail loudly on timeout.
+  ready=0
+  for _ in $(seq 1 30); do
     code="$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:$PORT/sessions" 2>/dev/null || echo 000)"
-    [[ "$code" != "000" ]] && break
+    if [[ "$code" != "000" ]]; then ready=1; break; fi
     kill -0 "$DAEMON_PID" 2>/dev/null || { echo "daemon died on startup; see /tmp/claudewatch-daemon.log" >&2; exit 1; }
     sleep 0.5
   done
+  [[ "$ready" == "1" ]] || { echo "daemon did not start listening on :$PORT within 15s; see /tmp/claudewatch-daemon.log" >&2; exit 1; }
 fi
 
 # 2. Point Config.mc at the local daemon (backing up any real one).
