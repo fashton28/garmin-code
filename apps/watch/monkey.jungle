@@ -1,0 +1,2 @@
+# ClaudeWatch - watch app build definition.
+project.manifest = manifest.xml
