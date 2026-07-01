@@ -1,15 +1,16 @@
-// Copy to apps/watch/source/Config.mc and fill in. Never commit the real Config.mc.
-// These are compile-time constants for v1 (see PRD section 8).
+// Compile-time configuration for ClaudeWatch (see PRD section 8).
+//
+// Copy this file to Config.mc and fill in your real Cloudflare tunnel URL and
+// token. Config.mc is git-ignored, so the secret is never committed.
 
 using Toybox.Lang;
 
 module Config {
     // Public HTTPS base URL of your Cloudflare tunnel, no trailing slash.
-    // Example: "https://claudewatch.example.com"
     const BASE_URL as Lang.String = "https://REPLACE-WITH-YOUR-TUNNEL-HOSTNAME";
 
-    // Must match CLAUDEWATCH_TOKEN in apps/daemon/.env
-    const TOKEN as Lang.String = "replace-with-a-long-random-token";
+    // Must match CLAUDEWATCH_TOKEN in apps/daemon/.env.
+    const TOKEN as Lang.String = "";
 
     // How many sessions to request (server caps at 50).
     const LIMIT as Lang.Number = 10;

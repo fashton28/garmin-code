@@ -29,6 +29,12 @@ if [[ ! -f "$CIQ_DEV_KEY" ]]; then
   exit 1
 fi
 
+CONFIG_FILE="$WATCH_DIR/source/Config.mc"
+if [[ ! -f "$CONFIG_FILE" ]]; then
+  echo "Config.mc missing; seeding from Config.mc.example (edit it with your real values)."
+  cp "$CONFIG_FILE.example" "$CONFIG_FILE"
+fi
+
 mkdir -p "$WATCH_DIR/bin"
 echo "Building apps/watch for device '$CIQ_DEVICE'..."
 "$CIQ_SDK_BIN/monkeyc" \

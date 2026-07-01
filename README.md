@@ -79,3 +79,7 @@ This runs `tools/build-watch.sh`, which auto-discovers the newest installed SDK.
 Override the defaults with the `CIQ_SDK_BIN`, `CIQ_DEV_KEY`, and `CIQ_DEVICE`
 environment variables if your paths differ. The compiled app lands at
 `apps/watch/bin/ClaudeWatch.prg`.
+
+If `Config.mc` is missing, the build seeds a placeholder from
+`Config.mc.example` so the compile succeeds; edit it with your real tunnel URL
+and token before the app can reach the daemon.
