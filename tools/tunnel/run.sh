@@ -16,6 +16,7 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 TUNNEL_DIR="$REPO_ROOT/tools/tunnel"
 CONFIG_FILE="$TUNNEL_DIR/config.yml"
+DAEMON_ENV="$REPO_ROOT/apps/daemon/.env"
 
 # --- Preflight checks -------------------------------------------------------
 
@@ -34,7 +35,7 @@ fi
 
 # The daemon refuses to start without CLAUDEWATCH_TOKEN. It can come from the
 # environment or apps/daemon/.env; warn early if we can find neither.
-if [[ -z "${CLAUDEWATCH_TOKEN:-}" ]] && ! grep -q '^CLAUDEWATCH_TOKEN=' "$REPO_ROOT/apps/daemon/.env" 2>/dev/null; then
+if [[ -z "${CLAUDEWATCH_TOKEN:-}" ]] && ! grep -q '^CLAUDEWATCH_TOKEN=' "$DAEMON_ENV" 2>/dev/null; then
   echo "error: CLAUDEWATCH_TOKEN is not set and apps/daemon/.env has no CLAUDEWATCH_TOKEN." >&2
   echo "       Export it (export CLAUDEWATCH_TOKEN=...) or set it in apps/daemon/.env." >&2
   echo "       It must match TOKEN in apps/watch/source/Config.mc." >&2
@@ -43,6 +44,28 @@ fi
 
 # --- Start daemon, then tunnel ---------------------------------------------
 
+# Resolve PORT the same way the daemon does: the real environment wins, else the
+# daemon reads PORT from apps/daemon/.env (serve.ts loadDotEnv), else 8787. If we
+# only honored the shell env, a PORT set solely in .env would make the daemon
+# bind one port while the readiness poll waits on another and falsely times out.
+if [[ -z "${PORT:-}" && -f "$DAEMON_ENV" ]]; then
+  while IFS= read -r rawline || [[ -n "$rawline" ]]; do
+    line="${rawline#"${rawline%%[![:space:]]*}"}"
+    line="${line%"${line##*[![:space:]]}"}"
+    [[ -z "$line" || "$line" == \#* ]] && continue
+    if [[ "$line" =~ ^PORT[[:space:]]*=(.*)$ ]]; then
+      value="${BASH_REMATCH[1]}"
+      value="${value#"${value%%[![:space:]]*}"}"
+      value="${value%"${value##*[![:space:]]}"}"
+      if [[ ${#value} -ge 2 && ( "${value:0:1}" == '"' || "${value:0:1}" == "'" ) \
+            && "${value: -1}" == "${value:0:1}" ]]; then
+        value="${value:1:${#value}-2}"
+      fi
+      PORT="$value"
+      break
+    fi
+  done < "$DAEMON_ENV"
+fi
 PORT="${PORT:-8787}"
 
 DAEMON_PID=""
