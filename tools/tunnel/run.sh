@@ -43,24 +43,53 @@ fi
 
 # --- Start daemon, then tunnel ---------------------------------------------
 
+PORT="${PORT:-8787}"
+
 DAEMON_PID=""
 cleanup() {
   if [[ -n "$DAEMON_PID" ]] && kill -0 "$DAEMON_PID" 2>/dev/null; then
-    echo "Stopping daemon (pid $DAEMON_PID)..."
-    kill "$DAEMON_PID" 2>/dev/null || true
+    echo "Stopping daemon (pgid $DAEMON_PID)..."
+    kill -TERM -"$DAEMON_PID" 2>/dev/null || true
+    for _ in 1 2 3 4 5 6 7 8 9 10; do
+      kill -0 "$DAEMON_PID" 2>/dev/null || break
+      sleep 0.5
+    done
+    kill -KILL -"$DAEMON_PID" 2>/dev/null || true
     wait "$DAEMON_PID" 2>/dev/null || true
   fi
 }
 trap cleanup EXIT INT TERM
 
+# Enable job control so the backgrounded daemon runs in its own process group
+# (pgid == the subshell pid). That lets cleanup() signal the whole tree - npm
+# and node included - rather than just the subshell, which npm would not
+# forward to node, leaking the daemon and holding port "$PORT".
+set -m
+
 echo "Starting daemon (npm run serve)..."
 ( cd "$REPO_ROOT" && npm run serve ) &
 DAEMON_PID=$!
 
-# Give the daemon a moment to bind its port; bail if it died immediately.
-sleep 2
-if ! kill -0 "$DAEMON_PID" 2>/dev/null; then
-  echo "error: daemon exited during startup. Check the output above." >&2
+set +m
+
+# Wait until the daemon is actually listening before starting cloudflared,
+# rather than assuming a fixed startup delay. Bail out early if it dies.
+echo "Waiting for daemon to listen on port $PORT..."
+ready=""
+for _ in $(seq 1 20); do
+  if ! kill -0 "$DAEMON_PID" 2>/dev/null; then
+    echo "error: daemon exited during startup. Check the output above." >&2
+    exit 1
+  fi
+  if curl -sf -o /dev/null "http://localhost:$PORT/sessions?limit=1" 2>/dev/null; then
+    ready="yes"
+    break
+  fi
+  sleep 0.5
+done
+
+if [[ -z "$ready" ]]; then
+  echo "error: daemon did not start listening on port $PORT within 10s." >&2
   exit 1
 fi
 
