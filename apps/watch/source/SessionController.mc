@@ -13,11 +13,32 @@ import Toybox.WatchUi;
 // bound callback method is not collected before the response settles.
 class SessionController {
 
+    // True while a /sessions request is in flight. Guards against overlapping
+    // fetches (e.g. mashing Refresh): a second load() is ignored until onReceive
+    // settles the first, so exactly one callback ever updates the view - no
+    // duplicate or stale swaps.
+    private var _inFlight as Boolean = false;
+
     function initialize() {
+    }
+
+    // Shows the loading state, then re-runs the fetch. Invoked by the sessions
+    // menu's Refresh row. Ignored while a request is already in flight so a
+    // stale loading view can't stomp an in-progress one.
+    function refresh() as Void {
+        if (_inFlight) {
+            return;
+        }
+        showStatus("ClaudeWatch", "Loading...", "");
+        load();
     }
 
     // Fires the GET /sessions request. Non-blocking: onReceive handles the rest.
     function load() as Void {
+        if (_inFlight) {
+            return;
+        }
+        _inFlight = true;
         var url = Config.BASE_URL + "/sessions?limit=" + Config.LIMIT.toString();
         var options = {
             :method => Communications.HTTP_REQUEST_METHOD_GET,
@@ -32,18 +53,19 @@ class SessionController {
     // makeWebRequest callback. responseCode is the HTTP status on success, or a
     // negative Connect IQ transport code (BLE unavailable, timeout, ...).
     function onReceive(responseCode as Number, data as Dictionary or String or Null) as Void {
+        _inFlight = false;
         if (responseCode == 200 && data instanceof Lang.Dictionary) {
             var sessions = parseSessions(data as Dictionary);
             if (sessions.size() == 0) {
-                showStatus("No sessions", "Nothing active right now");
+                showStatus("No sessions", "Nothing active right now", "Press to retry");
             } else {
                 WatchUi.switchToView(
                     new SessionsMenu(sessions),
-                    new SessionsMenuDelegate(),
+                    new SessionsMenuDelegate(self),
                     WatchUi.SLIDE_IMMEDIATE);
             }
         } else {
-            showStatus("Can't load", errorMessage(responseCode));
+            showStatus("Can't load", errorMessage(responseCode), "Press to retry");
         }
     }
 
@@ -63,10 +85,10 @@ class SessionController {
         return result;
     }
 
-    private function showStatus(heading as String, message as String) as Void {
+    private function showStatus(heading as String, message as String, hint as String) as Void {
         WatchUi.switchToView(
-            new StatusView(heading, message),
-            new StatusDelegate(),
+            new StatusView(heading, message, hint),
+            new StatusDelegate(self),
             WatchUi.SLIDE_IMMEDIATE);
     }
 
