@@ -11,6 +11,12 @@ A Connect IQ watch app fetches that API and lets you, from your wrist:
 
 Everything is styled in a terminal / "computer" aesthetic: a custom 0xProto monospace font, an orange focus accent, and a Claude spark.
 
+## Demo
+
+<video src="https://github.com/fashton28/garmin-code/raw/main/docs/demo.mp4" controls width="320"></video>
+
+> If the video does not play inline, [watch it here](https://github.com/fashton28/garmin-code/raw/main/docs/demo.mp4).
+
 ## How it works
 
 ```
