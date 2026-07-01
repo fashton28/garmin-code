@@ -24,12 +24,12 @@ class StatusView extends WatchUi.View {
 
         var cx = dc.getWidth() / 2;
         var cy = dc.getHeight() / 2;
-        dc.drawText(cx, cy - 18, Graphics.FONT_MEDIUM, _heading,
+        dc.drawText(cx, cy - 18, Fonts.medium(), _heading,
             Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-        dc.drawText(cx, cy + 16, Graphics.FONT_XTINY, _message,
+        dc.drawText(cx, cy + 16, Fonts.small(), _message,
             Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         if (!_hint.equals("")) {
-            dc.drawText(cx, cy + 40, Graphics.FONT_XTINY, _hint,
+            dc.drawText(cx, cy + 40, Fonts.small(), _hint,
                 Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         }
     }
