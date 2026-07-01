@@ -11,6 +11,8 @@
     "typecheck": "npm run typecheck --workspaces --if-present",
     "build": "npm run build --workspaces --if-present",
     "list": "npm run list --workspace @claudewatch/daemon",
+    "serve": "npm run serve --workspace @claudewatch/daemon",
+    "serve:tunnel": "bash tools/tunnel/run.sh",
     "build:watch": "bash tools/build-watch.sh"
   }
 }
