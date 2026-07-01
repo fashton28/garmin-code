@@ -1,0 +1,2 @@
+{"type":"assistant","cwd":"/Users/test/empty","message":{"role":"assistant","content":"orphan assistant line, no user turn"}}
+{"type":"ai-title","aiTitle":"Has a title but no user message"}

@@ -1,0 +1,3 @@
+{"type":"user","cwd":"/Users/test/thing","message":{"role":"user","content":"in a config dir"}}
+{"type":"assistant","message":{"role":"assistant","content":"reply"}}
+{"type":"ai-title","aiTitle":"Should be excluded (config dir)"}
