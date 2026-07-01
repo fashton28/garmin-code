@@ -46,7 +46,7 @@ function tokensMatch(expected: string | undefined, candidate: string): boolean {
 /** Extract the token from an `Authorization: Bearer <token>` header. */
 function extractBearer(header: string | undefined): string | undefined {
   if (!header) return undefined;
-  const match = /^Bearer (.+)$/.exec(header);
+  const match = /^Bearer (.+)$/i.exec(header);
   return match?.[1];
 }
 
