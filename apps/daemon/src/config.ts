@@ -11,6 +11,24 @@ export const ACTIVE_WINDOW_SECONDS = 60;
 /** Default port the HTTP server listens on when PORT is unset. */
 export const DEFAULT_PORT = 8787;
 
+// --- Heuristic state thresholds (see sessionReader.deriveState) ---
+/** File touched within this many seconds -> "working" (actively appending). */
+export const WORKING_WINDOW_SECONDS = 30;
+/** Last turn was the user, within this window -> "working" (input pending). */
+export const PENDING_USER_WINDOW_SECONDS = 300;
+/** Last turn was the assistant, within this window -> "waiting" (your move). */
+export const WAITING_WINDOW_SECONDS = 600;
+/** A hook-written state older than this is stale (session likely abandoned). */
+export const HOOK_FRESH_SECONDS = 6 * 60 * 60;
+
+/**
+ * Resolve the directory where Claude Code hooks drop per-session state files.
+ * Honors CLAUDEWATCH_STATE_DIR, defaulting to `~/.claude/claudewatch-state`.
+ */
+export function resolveStateDir(env: NodeJS.ProcessEnv = process.env): string {
+  return expandHome(env.CLAUDEWATCH_STATE_DIR ?? join(homedir(), ".claude", "claudewatch-state"));
+}
+
 /** Expand a leading `~` to the user's home directory, then resolve to absolute. */
 export function expandHome(p: string): string {
   if (p === "~") return homedir();

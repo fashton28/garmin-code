@@ -31,16 +31,13 @@ class SessionsMenu extends WatchUi.CustomMenu {
             :title => new SessionsMenuTitle()
         });
 
-        addItem(new SessionRow(:refresh, "Refresh", "Reload sessions"));
+        addItem(new SessionRow(:refresh, "Refresh", "Reload sessions", ""));
 
         var now = Time.now().value();
         for (var i = 0; i < sessions.size(); i++) {
             var s = sessions[i];
             var sub = TimeFormat.relative(s.lastActive, now) + " - " + s.project;
-            if (s.active) {
-                sub = "* " + sub;
-            }
-            addItem(new SessionRow(s.id, s.title, sub));
+            addItem(new SessionRow(s.id, s.title, sub, s.state));
         }
     }
 }
@@ -65,11 +62,13 @@ class SessionRow extends WatchUi.CustomMenuItem {
 
     private var _title as String;
     private var _sub as String;
+    private var _state as String;
 
-    function initialize(id as Object, title as String, sub as String) {
+    function initialize(id as Object, title as String, sub as String, state as String) {
         CustomMenuItem.initialize(id, {});
         _title = title;
         _sub = sub;
+        _state = state;
     }
 
     function draw(dc as Graphics.Dc) as Void {
@@ -84,7 +83,9 @@ class SessionRow extends WatchUi.CustomMenuItem {
         var titleColor = focused ? Graphics.COLOR_BLACK : Graphics.COLOR_WHITE;
         var subColor = focused ? Graphics.COLOR_BLACK : Graphics.COLOR_LT_GRAY;
         var cx = w / 2;
-        var maxWidth = w - 30;
+        var maxWidth = w - 64; // leave room for the state dot on the left
+
+        drawStateDot(dc, h);
 
         dc.setColor(titleColor, Graphics.COLOR_TRANSPARENT);
         dc.drawText(cx, h / 2 - 13, Graphics.FONT_TINY, fit(dc, _title, Graphics.FONT_TINY, maxWidth),
@@ -131,5 +132,29 @@ class SessionRow extends WatchUi.CustomMenuItem {
         var g = (ag + (bg - ag) * t).toNumber();
         var bl = (ab + (bb - ab) * t).toNumber();
         return (r << 16) | (g << 8) | bl;
+    }
+
+    // A small state dot on the left, with a white halo so it reads on both the
+    // dark rows and the orange focus gradient. No dot for the Refresh row.
+    private function drawStateDot(dc as Graphics.Dc, h as Number) as Void {
+        var color = stateColor(_state);
+        if (color < 0) {
+            return;
+        }
+        var x = 20;
+        var y = h / 2;
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+        dc.fillCircle(x, y, 8);
+        dc.setColor(color, Graphics.COLOR_TRANSPARENT);
+        dc.fillCircle(x, y, 6);
+    }
+
+    // Map a state to its dot color. -1 means "no dot" (e.g. the Refresh row).
+    // green = working, yellow = waiting, gray = idle.
+    private function stateColor(state as String) as Number {
+        if (state.equals("working")) { return Graphics.COLOR_GREEN; }
+        if (state.equals("waiting")) { return Graphics.COLOR_YELLOW; }
+        if (state.equals("idle")) { return Graphics.COLOR_LT_GRAY; }
+        return -1;
     }
 }

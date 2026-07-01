@@ -44,6 +44,9 @@ if (typeof data !== "object" || data === null || Array.isArray(data)) {
     if (!isInt(s.lastActive) || s.lastActive < 0) fail(`${at}.lastActive must be a non-negative integer (unix seconds)`);
     if (!isInt(s.messages) || s.messages < 0) fail(`${at}.messages must be a non-negative integer`);
     if (typeof s.active !== "boolean") fail(`${at}.active must be a boolean`);
+    if (!["working", "waiting", "idle"].includes(s.state)) {
+      fail(`${at}.state must be one of "working" | "waiting" | "idle"`);
+    }
 
     // Contract guarantees newest-first ordering.
     if (isInt(s.lastActive)) {
@@ -51,7 +54,7 @@ if (typeof data !== "object" || data === null || Array.isArray(data)) {
       prevLastActive = s.lastActive;
     }
 
-    const allowed = new Set(["id", "project", "title", "lastActive", "messages", "active"]);
+    const allowed = new Set(["id", "project", "title", "lastActive", "messages", "active", "state"]);
     for (const key of Object.keys(s)) {
       if (!allowed.has(key)) fail(`${at} has unexpected field "${key}"`);
     }

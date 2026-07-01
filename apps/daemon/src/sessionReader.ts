@@ -11,9 +11,14 @@ import {
   ACTIVE_WINDOW_SECONDS,
   DEFAULT_LIMIT,
   MAX_LIMIT,
+  PENDING_USER_WINDOW_SECONDS,
+  WAITING_WINDOW_SECONDS,
+  WORKING_WINDOW_SECONDS,
   resolveProjectsDir,
+  resolveStateDir,
 } from "./config.js";
-import type { Session } from "./types.js";
+import { readHookState } from "./stateStore.js";
+import type { Session, SessionState } from "./types.js";
 
 const TITLE_MAX = 60;
 
@@ -22,8 +27,10 @@ export interface ReadSessionsOptions {
   projectsDir?: string;
   /** Max sessions to return. Defaults to 10, hard-capped at 50. */
   limit?: number;
-  /** Injectable clock (ms) for deterministic `active` computation. */
+  /** Injectable clock (ms) for deterministic `active`/`state` computation. */
   now?: number;
+  /** Directory of hook-written state files. Defaults to resolveStateDir(). */
+  stateDir?: string;
 }
 
 /** Project directories we never surface (worktree scratch dirs, config store). */
@@ -45,6 +52,8 @@ interface ParsedSession {
   aiTitle: string | undefined;
   lastPrompt: string | undefined;
   messages: number;
+  /** Type of the last real conversation turn (metadata lines ignored). */
+  lastTurn: "user" | "assistant" | undefined;
 }
 
 /** Parse a single session file, accumulating only the fields the model needs. */
@@ -55,6 +64,7 @@ function parseSessionFile(filePath: string): ParsedSession {
     aiTitle: undefined,
     lastPrompt: undefined,
     messages: 0,
+    lastTurn: undefined,
   };
 
   const raw = readFileSync(filePath, "utf8");
@@ -73,9 +83,11 @@ function parseSessionFile(filePath: string): ParsedSession {
       case "user":
         acc.hasUser = true;
         acc.messages += 1;
+        acc.lastTurn = "user";
         break;
       case "assistant":
         acc.messages += 1;
+        acc.lastTurn = "assistant";
         break;
       case "ai-title":
         // Keep the last one seen.
@@ -112,6 +124,25 @@ function resolveTitle(parsed: ParsedSession): string {
   return "Untitled";
 }
 
+/**
+ * Heuristic activity state from file freshness + the last conversation turn:
+ * - touched very recently -> "working" (the file is actively being appended)
+ * - user spoke last & recently -> "working" (input pending, Claude presumably running)
+ * - assistant spoke last & recently -> "waiting" (Claude answered; your move)
+ * - otherwise -> "idle"
+ *
+ * This is the fallback; a fresh hook state (stateStore) overrides it.
+ */
+function heuristicState(
+  ageSeconds: number,
+  lastTurn: "user" | "assistant" | undefined,
+): SessionState {
+  if (ageSeconds <= WORKING_WINDOW_SECONDS) return "working";
+  if (lastTurn === "user" && ageSeconds <= PENDING_USER_WINDOW_SECONDS) return "working";
+  if (lastTurn === "assistant" && ageSeconds <= WAITING_WINDOW_SECONDS) return "waiting";
+  return "idle";
+}
+
 /** Shorten the filename stem to a short id, keeping it unique within the run. */
 function shortId(stem: string, used: Set<string>): string {
   const short = stem.slice(0, 8);
@@ -131,6 +162,7 @@ function clampLimit(limit: number | undefined): number {
  */
 export function readSessions(options: ReadSessionsOptions = {}): Session[] {
   const projectsDir = options.projectsDir ?? resolveProjectsDir();
+  const stateDir = options.stateDir ?? resolveStateDir();
   const limit = clampLimit(options.limit);
   const nowSeconds = Math.floor((options.now ?? Date.now()) / 1000);
 
@@ -171,13 +203,22 @@ export function readSessions(options: ReadSessionsOptions = {}): Session[] {
       if (!parsed.hasUser || title.length === 0) continue;
 
       const lastActive = Math.floor(mtimeMs / 1000);
+      const fullId = file.replace(/\.jsonl$/, "");
+      const ageSeconds = nowSeconds - lastActive;
+      // Hybrid: a fresh hook-written state wins; otherwise fall back to the
+      // freshness + last-turn heuristic.
+      const state =
+        readHookState(fullId, nowSeconds, stateDir) ??
+        heuristicState(ageSeconds, parsed.lastTurn);
+
       sessions.push({
-        id: shortId(file.replace(/\.jsonl$/, ""), usedIds),
+        id: shortId(fullId, usedIds),
         project: parsed.cwd ? basename(parsed.cwd) : dir,
         title,
         lastActive,
         messages: parsed.messages,
-        active: nowSeconds - lastActive <= ACTIVE_WINDOW_SECONDS && nowSeconds >= lastActive,
+        active: ageSeconds <= ACTIVE_WINDOW_SECONDS && nowSeconds >= lastActive,
+        state,
       });
     }
   }

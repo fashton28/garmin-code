@@ -1,6 +1,14 @@
 /**
- * The six-field session model from the frozen /sessions contract.
- * See contract/contract.md. No field beyond these six may be emitted.
+ * Coarse activity state of a session:
+ * - "working": Claude is actively processing.
+ * - "waiting": Claude finished and is waiting for your input.
+ * - "idle": no recent activity.
+ */
+export type SessionState = "working" | "waiting" | "idle";
+
+/**
+ * The session model from the frozen /sessions contract.
+ * See contract/contract.md. No field beyond these may be emitted.
  */
 export interface Session {
   /** Short, stable session id (stem of the session UUID / filename). Non-empty. */
@@ -15,6 +23,8 @@ export interface Session {
   messages: number;
   /** true if the file mtime is within the last 60 seconds. */
   active: boolean;
+  /** Coarse activity state: working | waiting | idle. */
+  state: SessionState;
 }
 
 /** The full /sessions response body. */

@@ -141,15 +141,85 @@ describe("schema validator", () => {
   test("rejects a non-descending sort order", () => {
     const bad = {
       sessions: [
-        { id: "a", project: "p", title: "t", lastActive: 1, messages: 0, active: false },
-        { id: "b", project: "p", title: "t", lastActive: 5, messages: 0, active: false },
+        { id: "a", project: "p", title: "t", lastActive: 1, messages: 0, active: false, state: "idle" },
+        { id: "b", project: "p", title: "t", lastActive: 5, messages: 0, active: false, state: "idle" },
       ],
     };
     assert.throws(() => validateResponse(bad), ResponseValidationError);
   });
 
+  test("rejects an invalid state", () => {
+    const bad = { sessions: [{ id: "a", project: "p", title: "t", lastActive: 5, messages: 3, active: true, state: "busy" }] };
+    assert.throws(() => validateResponse(bad), ResponseValidationError);
+  });
+
   test("accepts the canonical shape", () => {
-    const ok = { sessions: [{ id: "a", project: "p", title: "t", lastActive: 5, messages: 3, active: true }] };
+    const ok = { sessions: [{ id: "a", project: "p", title: "t", lastActive: 5, messages: 3, active: true, state: "working" }] };
     assert.doesNotThrow(() => validateResponse(ok));
+  });
+});
+
+describe("session state derivation", () => {
+  let root: string;
+  let projects: string;
+  let stateDir: string;
+  const proj = "-Users-test-stateproj";
+  const userLine = { type: "user", cwd: "/Users/test/stateproj", message: { role: "user", content: "hi" } };
+  const title = { type: "ai-title", aiTitle: "State test" };
+
+  before(() => {
+    root = mkdtempSync(join(tmpdir(), "cw-state-"));
+    projects = join(root, "projects");
+    stateDir = join(root, "state");
+    mkdirSync(join(projects, proj), { recursive: true });
+    mkdirSync(stateDir, { recursive: true });
+  });
+  after(() => rmSync(root, { recursive: true, force: true }));
+
+  function writeSession(id: string, secondsAgo: number, lines: object[]): void {
+    const p = join(projects, proj, `${id}.jsonl`);
+    writeFileSync(p, lines.map((l) => JSON.stringify(l)).join("\n") + "\n");
+    const when = new Date(NOW - secondsAgo * 1000);
+    utimesSync(p, when, when);
+  }
+
+  function stateOf(id: string): string {
+    const s = readSessions({ projectsDir: projects, stateDir, now: NOW }).find((x) => x.id === id.slice(0, 8));
+    assert.ok(s, `session ${id} present`);
+    return s.state;
+  }
+
+  test("fresh file -> working", () => {
+    writeSession("aaaa1111-0000-0000-0000-000000000001", 10, [userLine, { type: "assistant" }, title]);
+    assert.equal(stateOf("aaaa1111-0000-0000-0000-000000000001"), "working");
+  });
+
+  test("assistant spoke last & recent -> waiting", () => {
+    writeSession("bbbb2222-0000-0000-0000-000000000002", 120, [userLine, { type: "assistant" }, title]);
+    assert.equal(stateOf("bbbb2222-0000-0000-0000-000000000002"), "waiting");
+  });
+
+  test("user spoke last & recent -> working (input pending)", () => {
+    writeSession("cccc3333-0000-0000-0000-000000000003", 120, [{ type: "assistant" }, userLine, title]);
+    assert.equal(stateOf("cccc3333-0000-0000-0000-000000000003"), "working");
+  });
+
+  test("old file -> idle", () => {
+    writeSession("dddd4444-0000-0000-0000-000000000004", 7200, [userLine, { type: "assistant" }, title]);
+    assert.equal(stateOf("dddd4444-0000-0000-0000-000000000004"), "idle");
+  });
+
+  test("a fresh hook state overrides the heuristic", () => {
+    const id = "eeee5555-0000-0000-0000-000000000005";
+    writeSession(id, 7200, [userLine, { type: "assistant" }, title]); // heuristic: idle
+    writeFileSync(join(stateDir, `${id}.json`), JSON.stringify({ state: "working", ts: NOW_S }));
+    assert.equal(stateOf(id), "working");
+  });
+
+  test("a stale hook state is ignored (falls back to heuristic)", () => {
+    const id = "ffff6666-0000-0000-0000-000000000006";
+    writeSession(id, 7200, [userLine, { type: "assistant" }, title]); // heuristic: idle
+    writeFileSync(join(stateDir, `${id}.json`), JSON.stringify({ state: "working", ts: NOW_S - 7 * 3600 }));
+    assert.equal(stateOf(id), "idle");
   });
 });

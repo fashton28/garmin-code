@@ -26,7 +26,8 @@ Authorization: Bearer <token>
       "title": "Review entire repository for context",
       "lastActive": 1782903580,
       "messages": 764,
-      "active": true
+      "active": true,
+      "state": "working"
     }
   ]
 }
@@ -42,12 +43,23 @@ Authorization: Bearer <token>
 | `lastActive` | integer | Session file mtime as a Unix epoch in **seconds**. |
 | `messages`   | integer | Count of `user` + `assistant` lines in the session file. |
 | `active`     | boolean | `true` if the file mtime is within the last 60 seconds. |
+| `state`      | string  | Coarse activity state, one of `"working"`, `"waiting"`, `"idle"` (see below). |
+
+### `state`
+
+- `"working"` - Claude is actively processing.
+- `"waiting"` - Claude finished a turn and is waiting for your input.
+- `"idle"` - no recent activity.
+
+The daemon derives this **hybridly**: a fresh state written by the optional
+ClaudeWatch hooks (see `tools/hooks/`) wins; otherwise it falls back to a
+heuristic over the file's freshness and last conversation turn.
 
 ## Guarantees
 
 - Sessions are sorted by `lastActive` **descending** (newest first).
 - The array is truncated to `limit` (default 10, max 50).
-- No field beyond the six above is present. Keep the payload lean for the FR165 heap.
+- No field beyond the seven above is present. Keep the payload lean for the FR165 heap.
 
 ## Canonical fixture
 
