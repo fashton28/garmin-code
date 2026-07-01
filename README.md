@@ -93,3 +93,15 @@ then run both the daemon and the tunnel together:
 ```
 npm run serve:tunnel
 ```
+
+## Running end-to-end
+
+To see the watch app render your real sessions in the **simulator** against a
+local daemon (one command, tears down on Ctrl-C):
+
+```
+npm run sim
+```
+
+For the full walkthrough - simulator (I1) and sideloading to the physical
+Forerunner 165 (I2) - see [`docs/integration.md`](docs/integration.md).
