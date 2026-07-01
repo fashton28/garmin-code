@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  daemon:
+    name: Daemon (typecheck + test + build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install
+        run: npm ci
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Test
+        run: npm test
+      - name: Build
+        run: npm run build
+
+  # NOTE: the watch app (apps/watch) is intentionally NOT built in CI.
+  # It requires the Garmin Connect IQ SDK + a developer key, which are not
+  # available on GitHub-hosted runners. The watch is validated locally with
+  # `npm run build:watch` (monkeyc) and through the no-mistakes review gate.

@@ -26,6 +26,10 @@ The phone must be nearby and connected.
 | `apps/daemon/`    | Node + TypeScript daemon that reads session history and serves the API. |
 | `apps/watch/`     | Connect IQ (Monkey C) device app for the Forerunner 165. |
 | `tools/tunnel/`   | Cloudflare tunnel config and run scripts. |
+| `tools/build-watch.sh` | Local-only script that compiles the watch app with the Connect IQ SDK. |
+
+The repository is an npm workspace monorepo (root `package.json`), currently
+containing the `apps/daemon` workspace.
 
 The planning doc lives at `PRD.md` (kept local, git-ignored).
 
@@ -48,3 +52,30 @@ Config is supplied via git-ignored files with committed `.example` siblings:
 - Watch: copy `apps/watch/source/Config.mc.example` to `apps/watch/source/Config.mc`.
 
 Use the **same token** in both.
+
+## Building and testing
+
+Install everything from the repo root (`npm ci` installs all workspaces).
+The root scripts fan out across workspaces:
+
+```
+npm test         # run each workspace's tests
+npm run typecheck
+npm run build
+npm run list     # daemon: list the 10 most recent sessions
+```
+
+CI (`.github/workflows/ci.yml`) runs the daemon typecheck, tests, and build on
+every push and pull request to `main`.
+
+The watch app is **not** built in CI - it needs the Garmin Connect IQ SDK and a
+developer key. Build it locally instead:
+
+```
+npm run build:watch
+```
+
+This runs `tools/build-watch.sh`, which auto-discovers the newest installed SDK.
+Override the defaults with the `CIQ_SDK_BIN`, `CIQ_DEV_KEY`, and `CIQ_DEVICE`
+environment variables if your paths differ. The compiled app lands at
+`apps/watch/bin/ClaudeWatch.prg`.
