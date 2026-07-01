@@ -20,3 +20,6 @@ apps/watch/bin/
 tools/tunnel/config.yml
 tools/tunnel/*.json
 tools/tunnel/cert.pem
+
+# Local Claude Code project config (keep out of git)
+.claude/
