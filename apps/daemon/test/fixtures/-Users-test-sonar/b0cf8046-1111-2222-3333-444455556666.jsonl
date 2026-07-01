@@ -1,0 +1,7 @@
+{"type":"user","cwd":"/Users/test/sonar","message":{"role":"user","content":"look at the repo"}}
+{"type":"assistant","message":{"role":"assistant","content":"on it"}}
+{"type":"last-prompt","lastPrompt":"an earlier prompt that should lose to the ai title"}
+{"type":"ai-title","aiTitle":"Review entire repository for context"}
+{"type":"user","message":{"role":"user","content":"keep going"}}
+{"type":"assistant","message":{"role":"assistant","content":"done"}}
+{"type":"user","message":{"role":"user","content":"thanks"}}

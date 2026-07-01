@@ -1,0 +1,3 @@
+{"type":"user","cwd":"/Users/repo/worktree-scratch","message":{"role":"user","content":"in a worktree dir"}}
+{"type":"assistant","message":{"role":"assistant","content":"reply"}}
+{"type":"ai-title","aiTitle":"Should be excluded (worktrees dir)"}
