@@ -1,13 +1,15 @@
 import Toybox.Graphics;
 import Toybox.Lang;
+import Toybox.Math;
 import Toybox.Time;
 import Toybox.WatchUi;
 
-// The focused-row highlight is a vertical gradient between these two colors
-// (top -> bottom). Connect IQ has no gradient primitive, so SessionRow paints it
-// as a stack of thin interpolated bands. Tweak these to restyle the selection.
-const HIGHLIGHT_TOP as Number = 0xFFAA00;     // amber
-const HIGHLIGHT_BOTTOM as Number = 0xFF5500;  // deep orange
+// Claude's coral/orange, used for the spark mark under the title.
+const CLAUDE_CORAL as Number = 0xD97757;
+
+// The focused (centered) row is indicated by tinting its TEXT with this accent
+// color, rather than filling its background. Tweak to restyle the selection.
+const HIGHLIGHT_COLOR as Graphics.ColorType = Graphics.COLOR_ORANGE;
 
 // The sessions list, drawn as a WatchUi.CustomMenu so we control the focused-row
 // highlight color. (WatchUi.Menu2's highlight is drawn by the system theme and
@@ -42,7 +44,8 @@ class SessionsMenu extends WatchUi.CustomMenu {
     }
 }
 
-// The "Sessions" header drawn in the custom menu's title area.
+// The "Sessions" header plus a small Claude spark mark beneath it, drawn in the
+// custom menu's title area.
 class SessionsMenuTitle extends WatchUi.Drawable {
 
     function initialize() {
@@ -50,14 +53,36 @@ class SessionsMenuTitle extends WatchUi.Drawable {
     }
 
     function draw(dc as Graphics.Dc) as Void {
+        var cx = dc.getWidth() / 2;
+        var h = dc.getHeight();
+
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(dc.getWidth() / 2, dc.getHeight() / 2, Graphics.FONT_TINY, "Sessions",
+        dc.drawText(cx, (h * 0.36).toNumber(), Fonts.medium(), "Sessions",
             Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+
+        drawClaudeSpark(dc, cx, (h * 0.78).toNumber(), 11);
+    }
+
+    // A stylized Claude "spark": rays of alternating length radiating from a
+    // center point, in Claude's coral. (A nod to the logo; swap for the real
+    // asset as a bitmap if desired.)
+    private function drawClaudeSpark(dc as Graphics.Dc, cx as Number, cy as Number, r as Number) as Void {
+        dc.setColor(CLAUDE_CORAL, Graphics.COLOR_TRANSPARENT);
+        dc.setPenWidth(3);
+        var rays = 12;
+        for (var i = 0; i < rays; i++) {
+            var a = i.toFloat() * (Math.PI * 2.0 / rays);
+            var len = (i % 2 == 0) ? r : (r * 0.55).toNumber();
+            var x = cx + (len * Math.cos(a)).toNumber();
+            var y = cy + (len * Math.sin(a)).toNumber();
+            dc.drawLine(cx, cy, x, y);
+        }
+        dc.setPenWidth(1);
     }
 }
 
-// One drawable list row: title on top, sub-label beneath. The focused row is
-// painted with HIGHLIGHT_COLOR and its text flips to black for contrast.
+// One drawable list row: title on top, sub-label beneath. The focused row's
+// text is tinted with HIGHLIGHT_COLOR.
 class SessionRow extends WatchUi.CustomMenuItem {
 
     private var _title as String;
@@ -76,23 +101,23 @@ class SessionRow extends WatchUi.CustomMenuItem {
         var h = dc.getHeight();
         var focused = isFocused();
 
-        if (focused) {
-            fillVerticalGradient(dc, w, h, HIGHLIGHT_TOP, HIGHLIGHT_BOTTOM);
-        }
-
-        var titleColor = focused ? Graphics.COLOR_BLACK : Graphics.COLOR_WHITE;
-        var subColor = focused ? Graphics.COLOR_BLACK : Graphics.COLOR_LT_GRAY;
+        // Focused row: tint the text with the accent color (no background fill).
+        var titleColor = focused ? HIGHLIGHT_COLOR : Graphics.COLOR_WHITE;
+        var subColor = focused ? HIGHLIGHT_COLOR : Graphics.COLOR_LT_GRAY;
         var cx = w / 2;
         var maxWidth = w - 64; // leave room for the state dot on the left
 
         drawStateDot(dc, h);
 
+        var titleFont = Fonts.medium();
+        var subFont = Fonts.small();
+
         dc.setColor(titleColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, h / 2 - 13, Graphics.FONT_TINY, fit(dc, _title, Graphics.FONT_TINY, maxWidth),
+        dc.drawText(cx, h / 2 - 13, titleFont, fit(dc, _title, titleFont, maxWidth),
             Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
         dc.setColor(subColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, h / 2 + 15, Graphics.FONT_XTINY, fit(dc, _sub, Graphics.FONT_XTINY, maxWidth),
+        dc.drawText(cx, h / 2 + 15, subFont, fit(dc, _sub, subFont, maxWidth),
             Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
     }
 
@@ -109,33 +134,8 @@ class SessionRow extends WatchUi.CustomMenuItem {
         return s + "...";
     }
 
-    // Paint a top->bottom vertical gradient across the row by drawing 2px bands,
-    // each a color interpolated between `top` and `bottom`. (Connect IQ's Dc has
-    // no gradient fill, so we fake it band by band.)
-    private function fillVerticalGradient(dc as Graphics.Dc, w as Number, h as Number, top as Number, bottom as Number) as Void {
-        for (var y = 0; y < h; y += 2) {
-            var c = blendColor(top, bottom, y.toFloat() / h);
-            dc.setColor(c, c);
-            dc.fillRectangle(0, y, w, 2);
-        }
-    }
-
-    // Linear-interpolate two 0xRRGGBB colors: t=0 -> a, t=1 -> b.
-    private function blendColor(a as Number, b as Number, t as Float) as Number {
-        var ar = (a >> 16) & 0xFF;
-        var ag = (a >> 8) & 0xFF;
-        var ab = a & 0xFF;
-        var br = (b >> 16) & 0xFF;
-        var bg = (b >> 8) & 0xFF;
-        var bb = b & 0xFF;
-        var r = (ar + (br - ar) * t).toNumber();
-        var g = (ag + (bg - ag) * t).toNumber();
-        var bl = (ab + (bb - ab) * t).toNumber();
-        return (r << 16) | (g << 8) | bl;
-    }
-
-    // A small state dot on the left, with a white halo so it reads on both the
-    // dark rows and the orange focus gradient. No dot for the Refresh row.
+    // A small state dot on the left, with a white halo so it reads on the dark
+    // rows. No dot for the Refresh row.
     private function drawStateDot(dc as Graphics.Dc, h as Number) as Void {
         var color = stateColor(_state);
         if (color < 0) {
