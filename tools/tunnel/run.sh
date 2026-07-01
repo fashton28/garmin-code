@@ -81,7 +81,11 @@ for _ in $(seq 1 20); do
     echo "error: daemon exited during startup. Check the output above." >&2
     exit 1
   fi
-  if curl -sf -o /dev/null "http://localhost:$PORT/sessions?limit=1" 2>/dev/null; then
+  # /sessions is token-guarded and answers 401 without a token; that still
+  # proves the port is bound. Any real HTTP status counts as listening - only
+  # the connection-failure sentinel 000 means the daemon is not up yet.
+  code="$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:$PORT/sessions?limit=1" 2>/dev/null || true)"
+  if [[ -n "$code" && "$code" != "000" ]]; then
     ready="yes"
     break
   fi
