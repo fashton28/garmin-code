@@ -1,0 +1,16 @@
+{
+  "name": "claudewatch",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Monorepo root for ClaudeWatch - Garmin FR165 app + daemon that lists Claude Code sessions.",
+  "workspaces": [
+    "apps/daemon"
+  ],
+  "scripts": {
+    "test": "npm test --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "build": "npm run build --workspaces --if-present",
+    "list": "npm run list --workspace @claudewatch/daemon",
+    "build:watch": "bash tools/build-watch.sh"
+  }
+}
