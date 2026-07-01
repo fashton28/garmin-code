@@ -21,7 +21,7 @@ export const sessionsResponseSchema = {
       maxItems: 50,
       items: {
         type: "object",
-        required: ["id", "project", "title", "lastActive", "messages", "active", "state"],
+        required: ["id", "project", "title", "lastActive", "messages", "active", "state", "model"],
         additionalProperties: false,
         properties: {
           id: { type: "string", minLength: 1 },
@@ -31,6 +31,7 @@ export const sessionsResponseSchema = {
           messages: { type: "integer", minimum: 0 },
           active: { type: "boolean" },
           state: { type: "string", enum: ["working", "waiting", "idle"] },
+          model: { type: "string" },
         },
       },
     },

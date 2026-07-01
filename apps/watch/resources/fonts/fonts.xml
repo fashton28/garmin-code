@@ -1,5 +1,6 @@
 <resources xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://developer.garmin.com/downloads/connect-iq/resources.xsd">
     <fonts>
+        <font id="claudemono_big" filename="claudemono_big.fnt" />
         <font id="claudemono_med" filename="claudemono_med.fnt" />
         <font id="claudemono_sml" filename="claudemono_sml.fnt" />
     </fonts>

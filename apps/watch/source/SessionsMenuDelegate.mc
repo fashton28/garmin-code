@@ -25,8 +25,22 @@ class SessionsMenuDelegate extends WatchUi.Menu2InputDelegate {
             _controller.refresh();
             return;
         }
-        // Session rows are a no-op for now. The item's identifier is the session id
-        // (see SessionsMenu), which a future detail view will consume.
+        if (item.getId() == :usage) {
+            var usage = new UsageController();
+            WatchUi.pushView(new UsageView(usage), new UsageDelegate(), WatchUi.SLIDE_LEFT);
+            usage.load();
+            return;
+        }
+        // A session row: open the task menu for it. The identifier is the short
+        // session id the daemon's task endpoints expect.
+        var sessionId = item.getId() as String;
+        var header = "Session";
+        var model = "";
+        if (item instanceof SessionRow) {
+            header = (item as SessionRow).rowProject();
+            model = (item as SessionRow).rowModel();
+        }
+        WatchUi.pushView(new TaskMenu(header, model), new TaskMenuDelegate(sessionId), WatchUi.SLIDE_LEFT);
     }
 
     function onBack() as Void {

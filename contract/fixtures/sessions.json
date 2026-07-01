@@ -7,7 +7,8 @@
       "lastActive": 1782903580,
       "messages": 764,
       "active": true,
-      "state": "working"
+      "state": "working",
+      "model": "fable-5"
     },
     {
       "id": "7a1e9c33",
@@ -16,7 +17,8 @@
       "lastActive": 1782903120,
       "messages": 796,
       "active": false,
-      "state": "waiting"
+      "state": "waiting",
+      "model": "fable-5"
     },
     {
       "id": "3f92d5a1",
@@ -25,7 +27,8 @@
       "lastActive": 1782901080,
       "messages": 116,
       "active": false,
-      "state": "waiting"
+      "state": "waiting",
+      "model": "opus-4-8"
     },
     {
       "id": "c85b7e20",
@@ -34,7 +37,8 @@
       "lastActive": 1782892800,
       "messages": 508,
       "active": false,
-      "state": "idle"
+      "state": "idle",
+      "model": "fable-5"
     },
     {
       "id": "9d4a1f6b",
@@ -43,7 +47,8 @@
       "lastActive": 1782882000,
       "messages": 151,
       "active": false,
-      "state": "idle"
+      "state": "idle",
+      "model": "sonnet-5"
     },
     {
       "id": "1e6c8a94",
@@ -52,7 +57,8 @@
       "lastActive": 1782831600,
       "messages": 1251,
       "active": false,
-      "state": "idle"
+      "state": "idle",
+      "model": "fable-5"
     },
     {
       "id": "5b2f0d77",
@@ -61,7 +67,8 @@
       "lastActive": 1782802800,
       "messages": 14,
       "active": false,
-      "state": "idle"
+      "state": "idle",
+      "model": ""
     },
     {
       "id": "8c3e11a5",
@@ -70,7 +77,8 @@
       "lastActive": 1782730800,
       "messages": 88,
       "active": false,
-      "state": "idle"
+      "state": "idle",
+      "model": "haiku-4-5"
     },
     {
       "id": "a47d9e02",
@@ -79,7 +87,8 @@
       "lastActive": 1782626400,
       "messages": 233,
       "active": false,
-      "state": "idle"
+      "state": "idle",
+      "model": "opus-4-8"
     },
     {
       "id": "f0b6c8d3",
@@ -88,7 +97,8 @@
       "lastActive": 1782558000,
       "messages": 70,
       "active": false,
-      "state": "idle"
+      "state": "idle",
+      "model": ""
     }
   ]
 }

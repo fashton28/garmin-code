@@ -141,20 +141,20 @@ describe("schema validator", () => {
   test("rejects a non-descending sort order", () => {
     const bad = {
       sessions: [
-        { id: "a", project: "p", title: "t", lastActive: 1, messages: 0, active: false, state: "idle" },
-        { id: "b", project: "p", title: "t", lastActive: 5, messages: 0, active: false, state: "idle" },
+        { id: "a", project: "p", title: "t", lastActive: 1, messages: 0, active: false, state: "idle", model: "" },
+        { id: "b", project: "p", title: "t", lastActive: 5, messages: 0, active: false, state: "idle", model: "" },
       ],
     };
     assert.throws(() => validateResponse(bad), ResponseValidationError);
   });
 
   test("rejects an invalid state", () => {
-    const bad = { sessions: [{ id: "a", project: "p", title: "t", lastActive: 5, messages: 3, active: true, state: "busy" }] };
+    const bad = { sessions: [{ id: "a", project: "p", title: "t", lastActive: 5, messages: 3, active: true, state: "busy", model: "" }] };
     assert.throws(() => validateResponse(bad), ResponseValidationError);
   });
 
   test("accepts the canonical shape", () => {
-    const ok = { sessions: [{ id: "a", project: "p", title: "t", lastActive: 5, messages: 3, active: true, state: "working" }] };
+    const ok = { sessions: [{ id: "a", project: "p", title: "t", lastActive: 5, messages: 3, active: true, state: "working", model: "fable-5" }] };
     assert.doesNotThrow(() => validateResponse(ok));
   });
 });
