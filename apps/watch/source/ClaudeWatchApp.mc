@@ -31,7 +31,12 @@ class ClaudeWatchApp extends Application.AppBase {
     // The initial view is the loading state; SessionController replaces it once
     // the /sessions request settles.
     function getInitialView() as [WatchUi.Views] or [WatchUi.Views, WatchUi.InputDelegates] {
-        return [new StatusView("ClaudeWatch", "Loading..."), new StatusDelegate()];
+        var controller = _controller;
+        if (controller == null) {
+            controller = new SessionController();
+            _controller = controller;
+        }
+        return [new StatusView("ClaudeWatch", "Loading...", ""), new StatusDelegate(controller)];
     }
 
 }

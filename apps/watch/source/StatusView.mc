@@ -9,11 +9,13 @@ import Toybox.WatchUi;
 class StatusView extends WatchUi.View {
     private var _heading as String;
     private var _message as String;
+    private var _hint as String;
 
-    function initialize(heading as String, message as String) {
+    function initialize(heading as String, message as String, hint as String) {
         View.initialize();
         _heading = heading;
         _message = message;
+        _hint = hint;
     }
 
     function onUpdate(dc as Graphics.Dc) as Void {
@@ -26,5 +28,9 @@ class StatusView extends WatchUi.View {
             Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         dc.drawText(cx, cy + 16, Graphics.FONT_XTINY, _message,
             Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        if (!_hint.equals("")) {
+            dc.drawText(cx, cy + 40, Graphics.FONT_XTINY, _hint,
+                Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        }
     }
 }

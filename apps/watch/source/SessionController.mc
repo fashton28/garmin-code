@@ -29,7 +29,7 @@ class SessionController {
         if (_inFlight) {
             return;
         }
-        showStatus("ClaudeWatch", "Loading...");
+        showStatus("ClaudeWatch", "Loading...", "");
         load();
     }
 
@@ -57,7 +57,7 @@ class SessionController {
         if (responseCode == 200 && data instanceof Lang.Dictionary) {
             var sessions = parseSessions(data as Dictionary);
             if (sessions.size() == 0) {
-                showStatus("No sessions", "Nothing active right now");
+                showStatus("No sessions", "Nothing active right now", "Press to retry");
             } else {
                 WatchUi.switchToView(
                     new SessionsMenu(sessions),
@@ -65,7 +65,7 @@ class SessionController {
                     WatchUi.SLIDE_IMMEDIATE);
             }
         } else {
-            showStatus("Can't load", errorMessage(responseCode));
+            showStatus("Can't load", errorMessage(responseCode), "Press to retry");
         }
     }
 
@@ -85,10 +85,10 @@ class SessionController {
         return result;
     }
 
-    private function showStatus(heading as String, message as String) as Void {
+    private function showStatus(heading as String, message as String, hint as String) as Void {
         WatchUi.switchToView(
-            new StatusView(heading, message),
-            new StatusDelegate(),
+            new StatusView(heading, message, hint),
+            new StatusDelegate(self),
             WatchUi.SLIDE_IMMEDIATE);
     }
 
