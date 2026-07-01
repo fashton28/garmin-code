@@ -1,1 +1,20 @@
+# Planning doc (kept local, not tracked)
 PRD.md
+
+# Secrets / local config (committed as *.example instead)
+apps/daemon/.env
+apps/watch/source/Config.mc
+
+# Node
+node_modules/
+dist/
+*.log
+.DS_Store
+
+# Connect IQ build artifacts
+*.prg
+*.prg.debug.xml
+apps/watch/bin/
+
+# Cloudflare tunnel local state
+tools/tunnel/*.json
