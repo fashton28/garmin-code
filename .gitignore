@@ -18,4 +18,3 @@ apps/watch/bin/
 
 # Cloudflare tunnel local state
 tools/tunnel/*.json
-!tools/tunnel/config.example.yml

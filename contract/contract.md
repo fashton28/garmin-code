@@ -2,7 +2,7 @@
 
 This is the single seam between the two codebases.
 The watch app (`apps/watch`, Monkey C) and the daemon (`apps/daemon`, Node + TypeScript) both build against exactly this.
-Do not change it without updating `fixtures/sessions.json`, the schema, and both sides.
+Do not change it without updating `fixtures/sessions.json` and both sides.
 
 ## Endpoint
 
