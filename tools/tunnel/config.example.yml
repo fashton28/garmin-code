@@ -1,0 +1,33 @@
+# cloudflared named-tunnel config for ClaudeWatch (issue B3).
+#
+# One-time setup: copy this file to tools/tunnel/config.yml and fill in the
+# three placeholders below. config.yml is git-ignored (see .gitignore), so your
+# real tunnel id, credentials path, and hostname are never committed.
+#
+#   cp tools/tunnel/config.example.yml tools/tunnel/config.yml
+#
+# See tools/tunnel/README.md for the full walkthrough.
+
+# The tunnel's UUID, printed by `cloudflared tunnel create claudewatch`.
+# Also usable by name (e.g. `tunnel: claudewatch`) if you prefer.
+# REPLACE <TUNNEL-ID> with your tunnel's UUID.
+tunnel: <TUNNEL-ID>
+
+# Path to the tunnel's credentials JSON, written by `cloudflared tunnel create`.
+# By default cloudflared writes it to ~/.cloudflared/<TUNNEL-ID>.json. You can
+# point this anywhere; if you keep it inside tools/tunnel/ it stays git-ignored
+# via the tools/tunnel/*.json rule.
+# REPLACE <TUNNEL-ID> with the same UUID as above (or your chosen path).
+credentials-file: /Users/YOUR-USER/.cloudflared/<TUNNEL-ID>.json
+
+# Ingress rules are evaluated top to bottom; the first match wins, and the last
+# rule must be a catch-all with no hostname.
+ingress:
+  # Route your public hostname to the local daemon (npm run serve, PORT 8787).
+  # REPLACE claudewatch.example.com with the hostname you route to the tunnel
+  # via `cloudflared tunnel route dns claudewatch <hostname>`. This same
+  # hostname becomes BASE_URL in apps/watch/source/Config.mc.
+  - hostname: claudewatch.example.com
+    service: http://localhost:8787
+  # Required catch-all: anything that does not match above gets a 404.
+  - service: http_status:404

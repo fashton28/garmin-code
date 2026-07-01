@@ -83,3 +83,13 @@ environment variables if your paths differ. The compiled app lands at
 If `Config.mc` is missing, the build seeds a placeholder from
 `Config.mc.example` so the compile succeeds; edit it with your real tunnel URL
 and token before the app can reach the daemon.
+
+## Exposing the daemon (Cloudflare tunnel)
+
+The watch reaches the daemon through a stable public HTTPS URL served by a
+Cloudflare named tunnel. See `tools/tunnel/README.md` for the one-time setup,
+then run both the daemon and the tunnel together:
+
+```
+npm run serve:tunnel
+```

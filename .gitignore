@@ -16,5 +16,7 @@ dist/
 *.prg.debug.xml
 apps/watch/bin/
 
-# Cloudflare tunnel local state
+# Cloudflare tunnel local state (keep config.example.yml tracked)
+tools/tunnel/config.yml
 tools/tunnel/*.json
+tools/tunnel/cert.pem
