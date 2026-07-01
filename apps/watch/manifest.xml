@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<iq:manifest version="3" xmlns:iq="http://www.garmin.com/xml/connectiq">
+    <iq:application
+        id="7d05a174cb7c4613b60b67caea6b114c"
+        type="watch-app"
+        name="@Strings.AppName"
+        entry="ClaudeWatchApp"
+        launcherIcon="@Drawables.LauncherIcon"
+        minApiLevel="3.1.0">
+
+        <!-- Target device: Garmin Forerunner 165 (connectIQVersion 5.2.0). -->
+        <iq:products>
+            <iq:product id="fr165"/>
+        </iq:products>
+
+        <!-- W1 is a static list only; no Communications permission yet (added in a later networking issue). -->
+        <iq:permissions>
+        </iq:permissions>
+
+        <iq:languages>
+            <iq:language>eng</iq:language>
+        </iq:languages>
+
+        <iq:barrels>
+        </iq:barrels>
+
+    </iq:application>
+</iq:manifest>
