@@ -74,18 +74,39 @@ Pick one:
 
 | Option | Stable URL | Cost | Notes |
 |--------|-----------|------|-------|
-| Cloudflare **quick tunnel** | No (rotates each restart) | Free | Fastest to try; the URL changes when `cloudflared` restarts, which means editing `Config.mc` + rebuilding + re-sideloading. |
+| **Tailscale Funnel** (recommended) | Yes | Free | Stable `https://<host>.<tailnet>.ts.net`, no domain needed. Set it once, never rebuild the `.prg` for a URL change again. |
 | Cloudflare **named tunnel** | Yes | ~$1-12/yr (a domain) | Stable hostname; see `tools/tunnel/README.md`, then `npm run serve:tunnel`. |
-| **Tailscale Funnel** | Yes | Free | Stable `https://<host>.<tailnet>.ts.net`, no domain needed. |
+| Cloudflare **quick tunnel** | No (rotates each restart) | Free | Fastest to try, but the URL changes when `cloudflared` restarts, which means editing `Config.mc` + rebuilding + re-sideloading every time. |
 
-Quick tunnel (to try it out):
+**Recommended: Tailscale Funnel.**
+It gives you a permanent HTTPS URL for free, so you sideload the `.prg` exactly once and never touch the URL again.
+
+```bash
+brew install tailscale
+sudo brew services start tailscale          # runs tailscaled and auto-starts it on every boot
+sudo tailscale set --operator=$USER         # lets you run the commands below without sudo
+tailscale up                                # prints a login URL; open it and sign in (free personal account)
+tailscale funnel --bg 8787                  # exposes the daemon; prints your permanent https://<host>.<tailnet>.ts.net URL
+```
+
+Notes learned the hard way:
+
+- The **first** `tailscale funnel` run prints a one-time "enable Funnel for your tailnet" link. Open it, approve, then run the command again.
+- Do not test the Funnel URL with `curl` **from the same Mac** - MagicDNS resolves the hostname to the machine's private tailnet IP, so it looks broken (`000`) even when it works. Test from your phone on cellular, or force the public ingress:
+  ```bash
+  IP=$(nslookup <host>.<tailnet>.ts.net 8.8.8.8 | awk '/Address/{print $2}' | tail -1)
+  curl -s -o /dev/null -w '%{http_code}\n' --resolve "<host>.<tailnet>.ts.net:443:$IP" \
+    -H "Authorization: Bearer <token>" "https://<host>.<tailnet>.ts.net/sessions?limit=1"   # expect 200
+  ```
+
+Quick tunnel instead (only to try it out, URL is disposable):
 
 ```bash
 brew install cloudflared
 cloudflared tunnel --url http://localhost:8787       # prints a https://<random>.trycloudflare.com URL
 ```
 
-Keep this process running - the watch reaches the daemon only while it is up.
+Keep whichever process you pick running - the watch reaches the daemon only while it is up.
 
 ### 2. Point the watch app at it (and share the token)
 
